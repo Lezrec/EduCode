@@ -1,0 +1,5 @@
+--2/9/17--
+Created repository and created folders and files.
+Worked on syntax for EduCode.
+Created EduCodeCompiler Library.
+Worked on EduCodeCompiler Library.
