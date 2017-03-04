@@ -8,3 +8,8 @@ Worked on EduCodeCompiler Library.
 Added additional static classes for compilation.
 Cloned repo to main laptop.
 Defined some more syntax.
+--3/1/17--
+Changed approach of parsing, added Variable class to help with parsing
+
+--3/3/17--
+Added some functionality, need to still do testing. Added base generation, more debugging.

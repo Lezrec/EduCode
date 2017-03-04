@@ -86,6 +86,7 @@ namespace EduCodeCompiler
                         break;
                     case ";":
                         //should we require semicolons? would be required after assignment, or print
+                        //if not just keep this break case
                         break;
 
                     case "print":
@@ -101,26 +102,77 @@ namespace EduCodeCompiler
             }
         }
 
-        //Returns the next unparsed index
+        //These methods return the next unparsed index
 
         //variable x = 10;
         private static int RunThroughVarAssignment(string[] parts, int index) {
+            index++;
+            int tryparse = 0;
+            if (int.TryParse(parts[index], out tryparse)) {
+                //This raises an error, the variable shouldn't be named a number
+            }
+            else if (parts[index] == "=") {
+                //This raises an error, there is no variable name
+            }
+            else {
+                string varName = parts[index];
+                index++;
+                if (parts[index] != "=") {
+                    //This raises an error, there is no equals sign
+                }
+                else {
+                    index++;
+                    double valIfDouble;
+                    int valIfInt;
+                    string valIfString;
+
+                    if (parts[index].Substring(0, 1) == "\"") {
+                        //string check
+                        int len = parts[index].Length;
+                        int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
+                    }
+                    else if (double.TryParse(parts[index], out valIfDouble)) {
+                        //double assignment
+                        Variable var = new Variable(varName, Variable.VariableType.Number, valIfDouble);
+                        variables.Add(var);
+                    }
+                    else if (int.TryParse(parts[index], out valIfInt)) {
+                        //int assignment
+                        Variable var = new Variable(varName, Variable.VariableType.Number, valIfInt);
+                        variables.Add(var);
+                    }
+                    else if (parts[index].Substring(0, 1) == "[") {
+                        
+                        //group assignment
+                        //variables.Add(var);
+                    }
+                    index++;
+                }
+            }
+            
             return index;
         }
 
         //x = 20;
         private static int RunThroughVarReassignment(string[] parts, int index) {
+            index++;
             return index;
+            //TODO THIS
+
         }
 
         //Print x, Print 7, Print 900.
         private static int RunThroughPrint(string[] parts, int index) {
             return index;
+
+            //TODO THIS
         }
 
         //IE: 7+7+7+7+7
         private static int GroupModifications(string parts, int index) {
             return index;
+
+            //TODO THIS
         }
 
         private static bool VarExists(string varName) {
@@ -133,9 +185,31 @@ namespace EduCodeCompiler
         }
 
             //Generates the horribly made C# code
-            private static class Generator {
-               
+        private static class Generator {
+            private static string totalFileText = "";
+            private static string L = Environment.NewLine;
+            private const string fileDir = "GENERATED.cs";
+            public static void BeginMain() {
+               if (!File.Exists(fileDir)) {
+                    File.Create(fileDir);
+                    File.OpenWrite(fileDir);
+                    Debug.WriteToDebugFile("Gen file didn't exist, it does now!");
+               }
+                totalFileText += "using System;" + L + L + "public static void Main(string[] args) {" + L;
+                Debug.WriteToDebugFile("Main function opened");
+
             }
+
+            internal static void WriteToGenFile(string text) {
+                totalFileText += text + L;
+                Debug.WriteToDebugFile($"{text} was written to genfile");
+            }
+
+            public static void EndMain() {
+                totalFileText += "}"; //LUL
+                Debug.WriteToDebugFile("Main function closed");
+            }
+        }
 
             //Executes a flow based on Parsing
             private static class Executor {
@@ -160,16 +234,18 @@ namespace EduCodeCompiler
             }
 
             internal static void WriteToDebugFile(string message) {
+                string txt = File.ReadAllText(outFile);
                 File.OpenWrite(outFile);
-                File.WriteAllText(outFile, message);
+                string output = txt + "\n" + message;
+                File.WriteAllText(outFile, output);
             }
 
         }
         
-        public static void Compile(string fileOfUncompiled, string directoryToOutput, bool isExecuting) {
+        public static void Compile(string fileOfUncompiled, string directoryToOutput, bool isExecuting /*This means "Am I executing or not?"*/) {
             try {
                 string text = File.ReadAllText(fileOfUncompiled);
-                string[] textInParts = text.Split(new char[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] textInParts = text.Split(new string[] { " ", "\n", ";", Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
                 BeginParse(textInParts);
             }
             catch(IOException inputError) {
