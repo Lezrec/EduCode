@@ -11,8 +11,7 @@ using System.Collections.Generic;
 //Peephole optimization: the low-level code is scanned for simple local inefficiencies which are eliminated.
 
 
-namespace EduCodeCompiler
-{
+namespace EduCodeCompiler {
     public static class Compiler {
         private static List<Variable> variables;
 
@@ -70,8 +69,25 @@ namespace EduCodeCompiler
 
         private static void StoreVariable(Variable var) {
             if (variables == null) variables = new List<Variable>();
+            foreach (Variable vr in variables) {
+                if (var.Name == vr.Name) {
+                    //uh oh, cant instantiate 2 variables of the same name!
+                    throw new Exception(); //todo make this actually decent
+                }
+
+            }
             variables.Add(var);
             Debug.WriteToDebugFile($"Stored variable: {var.Name}");
+            //TODO check for no repeat variables
+        }
+
+        private static void ChangeVarValue(string name, object value) {
+            foreach (Variable var in variables) {
+                if (var.Name == name) {
+                    var.Reassign(value);
+                    break;
+                }
+            }
         }
 
 
@@ -80,7 +96,7 @@ namespace EduCodeCompiler
             int index = 0;
             while (index < parts.Length) {
                 string part = parts[index];
-                switch(part) {
+                switch (part) {
                     case "variable":
                         index = RunThroughVarAssignment(parts, index);
                         break;
@@ -100,6 +116,8 @@ namespace EduCodeCompiler
                         break;
                 }
             }
+            Debug.WriteToDebugFile("Successful parsing.");
+
         }
 
         //These methods return the next unparsed index
@@ -130,32 +148,83 @@ namespace EduCodeCompiler
                         //string check
                         int len = parts[index].Length;
                         int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
+                        valIfString = parts[index].Substring(1, endVal);
+                        Variable var = new Variable(varName, Variable.VariableType.String, valIfString);
+                        StoreVariable(var);
                     }
                     else if (double.TryParse(parts[index], out valIfDouble)) {
                         //double assignment
                         Variable var = new Variable(varName, Variable.VariableType.Number, valIfDouble);
-                        variables.Add(var);
+                        StoreVariable(var);
                     }
                     else if (int.TryParse(parts[index], out valIfInt)) {
                         //int assignment
                         Variable var = new Variable(varName, Variable.VariableType.Number, valIfInt);
-                        variables.Add(var);
+                        StoreVariable(var);
                     }
                     else if (parts[index].Substring(0, 1) == "[") {
-                        
+
                         //group assignment
-                        //variables.Add(var);
+                        //StoreVariable(var);
                     }
                     index++;
                 }
             }
-            
+
             return index;
         }
 
         //x = 20;
         private static int RunThroughVarReassignment(string[] parts, int index) {
+            //case already checks if name exists
+            string name = parts[index];
             index++;
+            if (parts[index] != "=") {
+                //error
+            }
+            else {
+                index++;
+                double valIfDouble;
+                int valIfInt;
+                string valIfString;
+                Variable[] vars = variables.ToArray();
+
+                if (parts[index].Substring(0, 1) == "\"") {
+                    //string check
+                    int len = parts[index].Length;
+                    int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
+                    valIfString = parts[index].Substring(1, endVal);
+                    //Reassignment
+                    for (int i = 0; i < vars.Length; i++) {
+                        if (vars[i].Name == name) {
+                            vars[i].Reassign(valIfString);
+                        }
+                    }
+
+                }
+                else if (double.TryParse(parts[index], out valIfDouble)) {
+                    //double assignment
+                    for (int i = 0; i < vars.Length; i++) {
+                        if (vars[i].Name == name) {
+                            vars[i].Reassign(valIfDouble);
+                        }
+                    }
+                }
+                else if (int.TryParse(parts[index], out valIfInt)) {
+                    //int assignment
+                    for (int i = 0; i < vars.Length; i++) {
+                        if (vars[i].Name == name) {
+                            vars[i].Reassign(valIfInt);
+                        }
+                    }
+                }
+                else if (parts[index].Substring(0, 1) == "[") {
+                    //TODO
+                    //group assignment
+                    //variables.Add(var);
+                }
+                index++;
+            }
             return index;
             //TODO THIS
 
@@ -164,19 +233,19 @@ namespace EduCodeCompiler
         //Print x, Print 7, Print 900.
         private static int RunThroughPrint(string[] parts, int index) {
             return index;
-
+            //should be easy enough
             //TODO THIS
         }
 
         //IE: 7+7+7+7+7
         private static int GroupModifications(string parts, int index) {
             return index;
-
+            //f*** me this is going to be tricky
             //TODO THIS
         }
 
         private static bool VarExists(string varName) {
-            foreach(Variable vari in variables) {
+            foreach (Variable vari in variables) {
                 if (vari.Name == varName) {
                     return true;
                 }
@@ -184,17 +253,17 @@ namespace EduCodeCompiler
             return false;
         }
 
-            //Generates the horribly made C# code
+        //Generates the horribly made C# code
         private static class Generator {
             private static string totalFileText = "";
             private static string L = Environment.NewLine;
             private const string fileDir = "GENERATED.cs";
             public static void BeginMain() {
-               if (!File.Exists(fileDir)) {
+                if (!File.Exists(fileDir)) {
                     File.Create(fileDir);
                     File.OpenWrite(fileDir);
                     Debug.WriteToDebugFile("Gen file didn't exist, it does now!");
-               }
+                }
                 totalFileText += "using System;" + L + L + "public static void Main(string[] args) {" + L;
                 Debug.WriteToDebugFile("Main function opened");
 
@@ -211,45 +280,66 @@ namespace EduCodeCompiler
             }
         }
 
-            //Executes a flow based on Parsing
-            private static class Executor {
-
+        //Executes a flow based on Parsing
+        private static class Executor {
+            internal static void Print(object value) {
+                Console.WriteLine(value);
             }
-        
+        }
 
-        
+
+
 
         private static class Debug {
 
             private const string outFile = "DEBUG.txt";
 
             private static void Log(string message, string toString, string stackTrace) {
-
+                //TODO THIS
             }
 
             internal static void ParseExecption(Exception exc) {
                 string message = exc.Message;
                 string toString = exc.ToString();
                 string stackTrace = exc.StackTrace;
+                //TODO THIS
+            }
+
+            internal static void Clear() {
+                if (!File.Exists(outFile)) File.Create(outFile);
+                else {
+                    File.WriteAllText(outFile, "");
+                }
+                File.WriteAllText(outFile, "--DEBUG--");
             }
 
             internal static void WriteToDebugFile(string message) {
+                if (!File.Exists(outFile)) File.Create(outFile);
                 string txt = File.ReadAllText(outFile);
-                File.OpenWrite(outFile);
-                string output = txt + "\n" + message;
+                //File.OpenWrite(outFile);
+                string output = txt + Environment.NewLine + message;
                 File.WriteAllText(outFile, output);
             }
 
         }
-        
+
         public static void Compile(string fileOfUncompiled, string directoryToOutput, bool isExecuting /*This means "Am I executing or not?"*/) {
             try {
+                Debug.Clear();
+                if (!File.Exists(fileOfUncompiled)) { Debug.WriteToDebugFile("The specified .edc file does not exist"); throw new IOException("Specified .edc file does not exist."); /*throw new Exception("No file");*/ } //TODO MAKE THIS EXCEPTION BETTER
+                else if (!File.Exists(directoryToOutput)) {
+                    Debug.WriteToDebugFile("The specified .cs file does not exist.");
+                    throw new IOException("Specified .cs file does not exist.");
+                    /*throw new Exception("No file");*/
+                }
                 string text = File.ReadAllText(fileOfUncompiled);
-                string[] textInParts = text.Split(new string[] { " ", "\n", ";", Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries);
+                string[] textInParts = text.Split(new string[] { " ", "\n", ";", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                 BeginParse(textInParts);
+                //TODO OUTPUT TO OUTDIR (right now I have GENERATED.CS as outdir)
             }
-            catch(IOException inputError) {
+            catch (IOException inputError) {
                 Debug.ParseExecption(inputError);
+                Console.WriteLine("Error compiling.\nCheck the debug file for more.");
             }
         }
     }

@@ -2,14 +2,17 @@
 Created repository and created folders and files.
 Worked on syntax for EduCode.
 Created EduCodeCompiler Library.
-Worked on EduCodeCompiler Library.
+Worked on EduCodeCompiler Library. 1hr
 
 --2/15/17--
 Added additional static classes for compilation.
 Cloned repo to main laptop.
-Defined some more syntax.
+Defined some more syntax. 1hr
 --3/1/17--
-Changed approach of parsing, added Variable class to help with parsing
+Changed approach of parsing, added Variable class to help with parsing. 1hr
 
 --3/3/17--
-Added some functionality, need to still do testing. Added base generation, more debugging.
+Added some functionality, need to still do testing. Added base generation, more debugging. 2.5hr
+
+--3/4/17--
+Began debugging, starting messing around with in and out files. Worked on parsing some more. 3hr
