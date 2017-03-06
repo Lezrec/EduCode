@@ -16,3 +16,6 @@ Added some functionality, need to still do testing. Added base generation, more 
 
 --3/4/17--
 Began debugging, starting messing around with in and out files. Worked on parsing some more. 3hr
+
+--3/5/17--
+Fixed string parsing, worked on print function. 1.5hr

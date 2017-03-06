@@ -145,11 +145,42 @@ namespace EduCodeCompiler {
                     string valIfString;
 
                     if (parts[index].Substring(0, 1) == "\"") {
-                        //string check
+                        string valIsStr = "";
                         int len = parts[index].Length;
-                        int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
-                        valIfString = parts[index].Substring(1, endVal);
-                        Variable var = new Variable(varName, Variable.VariableType.String, valIfString);
+                        if (parts[index].Substring(1, len - 1).Contains("\"")) {
+                            //1 word/number/thing
+
+                            int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
+                            valIsStr = parts[index].Substring(1, endVal);
+                        }
+                        else {
+                            //has spaces or no ending (error)
+                            valIsStr += parts[index].Substring(1, len - 1);
+                            while (!parts[index].Contains("\"")) {
+                                valIsStr += " " + parts[index];
+                                index++;
+                                //will throw an error if no ending
+                            }
+                            if (parts[index] == "\"") {
+
+                            }
+                            else if (parts[index].Substring(parts[index].Length - 1, 1) != "\"") {
+                                //this raises an exception
+                            }
+                            else {
+                                int length = parts[index].Length;
+
+                                valIsStr += parts[index].Substring(0, length - 1);
+                            }
+
+                            //goto gen and executor
+                        }
+
+
+                        //string check
+                       
+                        
+                        Variable var = new Variable(varName, Variable.VariableType.String, valIsStr);
                         StoreVariable(var);
                     }
                     else if (double.TryParse(parts[index], out valIfDouble)) {
@@ -191,6 +222,7 @@ namespace EduCodeCompiler {
 
                 if (parts[index].Substring(0, 1) == "\"") {
                     //string check
+                    //TODO make illegal symbols
                     int len = parts[index].Length;
                     int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
                     valIfString = parts[index].Substring(1, endVal);
@@ -230,8 +262,56 @@ namespace EduCodeCompiler {
 
         }
 
-        //Print x, Print 7, Print 900.
+        //print 2, print 2.5, print [2,3,4,5], print ["2","a","c","e"]
         private static int RunThroughPrint(string[] parts, int index) {
+            index++;
+            if (VarExists(parts[index])) {
+                //printing variable
+                //go to gen and executor
+            }
+            else {
+                double valIsNum;
+                if (double.TryParse(parts[index], out valIsNum)) {
+                    //go to gen and executor
+                }
+                else if (parts[index].Substring(0,1) == "\"") {
+
+                    string valIsStr = "";
+                    int len = parts[index].Length;
+                    if (parts[index].Substring(1, len - 1).Contains("\"")) {
+                        //1 word/number/thing
+                        
+                        int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
+                        valIsStr = parts[index].Substring(1, endVal);
+                    }
+                    else {
+                        //has spaces or no ending (error)
+                        valIsStr += parts[index].Substring(1, len - 1);
+                        while(!parts[index].Contains("\"")) {
+                            valIsStr += " " + parts[index];
+                            index++;
+                            //will throw an error if no ending
+                        }
+                        if (parts[index] == "\"") {
+                        
+                        }
+                        else if (parts[index].Substring(parts[index].Length-1, 1) != "\"") {
+                            //this raises an exception
+                        }
+                        else {
+                            int length = parts[index].Length;
+                            
+                            valIsStr += parts[index].Substring(0, length - 1);
+                        }
+
+                        //goto gen and executor
+                    }
+                }
+                else {
+                    //groups andor exception
+                }
+            }
+            index++;
             return index;
             //should be easy enough
             //TODO THIS
