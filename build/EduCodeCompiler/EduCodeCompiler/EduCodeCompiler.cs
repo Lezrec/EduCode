@@ -48,6 +48,8 @@ namespace EduCodeCompiler {
             public void Reassign(object value) {
                 //Check if types match
                 //Group values will have to debug write differently
+                if (value is double || value is string) this.value = value;
+                
                 Debug.WriteToDebugFile($"Reassigned variable {name} to {value}");
             }
 
@@ -61,6 +63,11 @@ namespace EduCodeCompiler {
 
             public override bool Equals(object other) {
                 return value.Equals(other); //Will have to create equals method for groups
+            }
+
+            public override string ToString() {
+                //for now
+                return value.ToString();
             }
 
 
@@ -113,6 +120,7 @@ namespace EduCodeCompiler {
                             index = RunThroughVarReassignment(parts, index);
                             //for now this is the only other case
                         }
+                        
                         break;
                 }
             }
@@ -155,9 +163,12 @@ namespace EduCodeCompiler {
                         }
                         else {
                             //has spaces or no ending (error)
+                            
                             valIsStr += parts[index].Substring(1, len - 1);
+                            index++;
+                            valIsStr += " ";
                             while (!parts[index].Contains("\"")) {
-                                valIsStr += " " + parts[index];
+                                valIsStr += parts[index] + " ";
                                 index++;
                                 //will throw an error if no ending
                             }
@@ -190,6 +201,7 @@ namespace EduCodeCompiler {
                     }
                     else if (int.TryParse(parts[index], out valIfInt)) {
                         //int assignment
+                        //technically this should never happen as double is more inclusive than int
                         Variable var = new Variable(varName, Variable.VariableType.Number, valIfInt);
                         StoreVariable(var);
                     }
@@ -197,6 +209,13 @@ namespace EduCodeCompiler {
 
                         //group assignment
                         //StoreVariable(var);
+                    }
+                    else if (parts[index].Contains("+")) {
+                        //groupmodification
+                        index = GroupModificationsNumbers(parts,index);
+                        double.TryParse(parts[index], out valIfDouble);
+                        Variable var = new Variable(varName, Variable.VariableType.Number, valIfDouble);
+                        StoreVariable(var);
                     }
                     index++;
                 }
@@ -255,6 +274,16 @@ namespace EduCodeCompiler {
                     //group assignment
                     //variables.Add(var);
                 }
+                else if (parts[index].Contains("+")) {
+                    //groupmodification
+                    index = GroupModificationsNumbers(parts, index);
+                    double.TryParse(parts[index], out valIfDouble);
+                    for (int i = 0; i < vars.Length; i++) {
+                        if (vars[i].Name == name) {
+                            vars[i].Reassign(valIfInt);
+                        }
+                    }
+                }
                 index++;
             }
             return index;
@@ -268,11 +297,27 @@ namespace EduCodeCompiler {
             if (VarExists(parts[index])) {
                 //printing variable
                 //go to gen and executor
+                Variable v = null; //this should never print out null
+                foreach(Variable var in variables) {
+                    if (var.Name == parts[index]) {
+                        v = var;
+                        break;
+                    }
+                }
+                Executor.PrintVar(v);
             }
             else {
                 double valIsNum;
                 if (double.TryParse(parts[index], out valIsNum)) {
                     //go to gen and executor
+                    Executor.Print($"{valIsNum}");
+                }
+
+                else if (parts[index].Contains("+")) {
+                    //groupmodification
+                    GroupModificationsNumbers(parts, index);
+                    double.TryParse(parts[index], out valIsNum);
+                    Executor.Print($"{valIsNum}");
                 }
                 else if (parts[index].Substring(0,1) == "\"") {
 
@@ -305,7 +350,9 @@ namespace EduCodeCompiler {
                         }
 
                         //goto gen and executor
+                       
                     }
+                    Executor.Print(valIsStr);
                 }
                 else {
                     //groups andor exception
@@ -318,11 +365,33 @@ namespace EduCodeCompiler {
         }
 
         //IE: 7+7+7+7+7
-        private static int GroupModifications(string parts, int index) {
+        private static int GroupModificationsNumbers(string[] parts, int index) {
+            //im gonna have this only apply to numbers because REDACTED anyone who does this with strings for now
+            //instead of returning a tuple or some stuff like that ill just change parts[index] to the value
+            //and the plusses will have to be together because im a meanie like that (actually its because if they had spaces that messes EVERYTHING UP [maybe ill include it later but I DONT HAVE TIME])
+            string part = parts[index];
+            double total = 0;
+            string[] nums = part.Trim().Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach(string num in nums) {
+                if (num.Contains("\"")) {
+                    //exception! for now
+                }
+                else {
+                    double val = 0;
+                    if (!double.TryParse(num, out val)) {
+                        //exception trouble parsing
+                    }
+                    else {
+                        total += val; //todo check if val is right
+                    }
+                }
+            }
+            parts[index] = $"{total}";
             return index;
-            //f*** me this is going to be tricky
+            //REDACTED me this is going to be tricky
             //TODO THIS
         }
+
 
         private static bool VarExists(string varName) {
             foreach (Variable vari in variables) {
@@ -362,8 +431,12 @@ namespace EduCodeCompiler {
 
         //Executes a flow based on Parsing
         private static class Executor {
-            internal static void Print(object value) {
-                Console.WriteLine(value);
+            internal static void PrintVar(Variable var) {
+                Console.WriteLine(var.ToString());
+            }
+
+            internal static void Print(string str) {
+                Console.WriteLine(str);
             }
         }
 
