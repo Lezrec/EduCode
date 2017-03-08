@@ -19,3 +19,6 @@ Began debugging, starting messing around with in and out files. Worked on parsin
 
 --3/5/17--
 Fixed string parsing, worked on print function. 1.5hr
+
+--3/7/17--
+Worked on debugging, strings, modification of numbers, documentation. 4.5hr
