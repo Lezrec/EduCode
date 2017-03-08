@@ -242,15 +242,49 @@ namespace EduCodeCompiler {
                 if (parts[index].Substring(0, 1) == "\"") {
                     //string check
                     //TODO make illegal symbols
-                    int len = parts[index].Length;
-                    int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
-                    valIfString = parts[index].Substring(1, endVal);
-                    //Reassignment
-                    for (int i = 0; i < vars.Length; i++) {
-                        if (vars[i].Name == name) {
-                            vars[i].Reassign(valIfString);
+                    if (parts[index].Substring(0, 1) == "\"") {
+                        string valIsStr = "";
+                        int len = parts[index].Length;
+                        if (parts[index].Substring(1, len - 1).Contains("\"")) {
+                            //1 word/number/thing
+
+                            int endVal = parts[index].Substring(1, len - 1).IndexOf("\"");
+                            valIsStr = parts[index].Substring(1, endVal);
                         }
-                    }
+                        else {
+                            //has spaces or no ending (error)
+
+                            valIsStr += parts[index].Substring(1, len - 1);
+                            index++;
+                            valIsStr += " ";
+                            while (!parts[index].Contains("\"")) {
+                                valIsStr += parts[index] + " ";
+                                index++;
+                                //will throw an error if no ending
+                            }
+                            if (parts[index] == "\"") {
+
+                            }
+                            else if (parts[index].Substring(parts[index].Length - 1, 1) != "\"") {
+                                //this raises an exception
+                            }
+                            else {
+                                int length = parts[index].Length;
+
+                                valIsStr += parts[index].Substring(0, length - 1);
+                            }
+
+
+                            //Reassignment
+                            for (int i = 0; i < vars.Length; i++) {
+                                if (vars[i].Name == name) {
+                                    vars[i].Reassign(valIsStr);
+                                    break;
+
+                                }
+                            }
+                        }
+                    } //TODO TEST THIS
 
                 }
                 else if (double.TryParse(parts[index], out valIfDouble)) {

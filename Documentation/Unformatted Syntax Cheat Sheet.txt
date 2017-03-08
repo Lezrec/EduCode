@@ -1,0 +1,6 @@
+Syntax Cheat Sheet:
+
+To declare a variable: "variable x = 2", "variable x = "hi", "variable x = 2.5", "variable x = 2.5+2.5"
+To modify a variable: "x = 3.5", "x = "hello" ", "x = 2.5 + 3.5"
+To print a variable: "print x"
+To print a value: "print 1", "print "test" "
