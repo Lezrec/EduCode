@@ -464,7 +464,7 @@ namespace EduCodeCompiler {
                         anchor = i;
                         total += val;
                         int len = 0;
-                        while (!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                        while (!parts[index].Substring(anchor, len).Contains("-") && startIndex + len < parts[index].Length) {
                             len++;
                         }
                         int anchor2 = i - 1 + len;
@@ -508,7 +508,7 @@ namespace EduCodeCompiler {
                         anchor = i;
                         total += val;
                         int len = 0;
-                        while (!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                        while (!parts[index].Substring(anchor, len).Contains("*") && startIndex + len < parts[index].Length) {
                             len++;
                         }
                         int anchor2 = i - 1 + len;
@@ -552,7 +552,7 @@ namespace EduCodeCompiler {
                         anchor = i;
                         total += val;
                         int len = 0;
-                        while (!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                        while (!parts[index].Substring(anchor, len).Contains("/") && startIndex + len < parts[index].Length) {
                             len++;
                         }
                         int anchor2 = i - 1 + len;
