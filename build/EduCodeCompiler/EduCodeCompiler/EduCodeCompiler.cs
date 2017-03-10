@@ -210,7 +210,7 @@ namespace EduCodeCompiler {
                         //group assignment
                         //StoreVariable(var);
                     }
-                    else if (parts[index].Contains("+")) {
+                    else if (parts[index].Contains("+") || parts[index].Contains("*") || parts[index].Contains("/") || parts[index].Contains("-")) {
                         //groupmodification
                         index = GroupModificationsNumbers(parts,index);
                         double.TryParse(parts[index], out valIfDouble);
@@ -308,7 +308,7 @@ namespace EduCodeCompiler {
                     //group assignment
                     //variables.Add(var);
                 }
-                else if (parts[index].Contains("+")) {
+                else if (parts[index].Contains("+") || parts[index].Contains("*") || parts[index].Contains("/") || parts[index].Contains("-")) {
                     //groupmodification
                     index = GroupModificationsNumbers(parts, index);
                     double.TryParse(parts[index], out valIfDouble);
@@ -405,22 +405,142 @@ namespace EduCodeCompiler {
             //and the plusses will have to be together because im a meanie like that (actually its because if they had spaces that messes EVERYTHING UP [maybe ill include it later but I DONT HAVE TIME])
             string part = parts[index];
             double total = 0;
-            string[] nums = part.Trim().Split(new char[] { '+' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach(string num in nums) {
-                if (num.Contains("\"")) {
-                    //exception! for now
-                }
-                else {
-                    double val = 0;
-                    if (!double.TryParse(num, out val)) {
-                        //exception trouble parsing
+            string num = "";
+            int anchor = 0;
+            int startIndex;
+            for(int i = 0; i < parts[index].Length; i++) {
+                
+                if (parts[index].Substring(anchor, i - anchor).Contains("+")) {
+                    startIndex = i;
+                    double val;
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                        //exception
                     }
                     else {
-                        total += val; //todo check if val is right
+                        //look for next number
+                        anchor = i;
+                        total += val;
+                        int len = 0;
+                        while(!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                            len++;
+                        }
+                        int anchor2 = i - 1 + len;
+                        i = len;
+                        int len2 = anchor2 - anchor;
+                        string oPart;
+                        bool end;
+                        if (startIndex + len == parts[index].Length) {
+                            oPart = parts[index].Substring(startIndex);
+                            end = true;
+                        }else {
+                            oPart = parts[index].Substring(anchor, len2);
+                            end = false;
+                        }
+                            
+                        double val2;
+                        if (!double.TryParse(oPart, out val2)) {
+                            //exception
+                        }
+                        else {
+                            total += val2;
+                            if (!end) parts[index] = total + parts[index].Substring(anchor2);
+                            else parts[index] = "" + total;
+                        }
+                        
+                        total = 0;
+                        i = 0;
+                        anchor = 0;
+                        continue ;
                     }
                 }
+                else if (parts[index].Substring(anchor, i - anchor).Contains("-") && parts[index].Substring(0,1) != "-") {
+                    anchor = i;
+                    double val;
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                        //exception
+                    }
+                    else {
+                        //parse
+                        anchor = i;
+                        total += val;
+                        for (; i < parts[index].Length; i++) {
+                            if (parts[index].Substring(anchor, i - anchor).Contains("+") || i == parts[index].Length - 1) {
+                                anchor = i;
+                                double val2;
+                                if (!double.TryParse(parts[index].Substring(anchor, i - anchor + 1), out val2)) {
+                                    //exception
+                                }
+                                else {
+                                    //total += val2;
+                                    num = $"{val - val2}{parts[index].Substring(i, 1)}";
+                                    break;
+                                }
+                            }
+                        }
+                        i = 0;
+                        anchor = 0;
+                        continue;
+                    }
+                }
+                else if (parts[index].Substring(anchor, i - anchor).Contains("*")) {
+                    anchor = i;
+                    double val;
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                        //exception
+                    }
+                    else {
+                        //parse
+                        for (; i < parts[index].Length; i++) {
+                            if (parts[index].Substring(anchor, i - anchor).Contains("+") || i == parts[index].Length - 1) {
+                                anchor = i;
+                                double val2;
+                                if (!double.TryParse(parts[index].Substring(anchor, i - anchor + 1), out val2)) {
+                                    //exception
+                                }
+                                else {
+                                    //total += val2;
+                                    num = $"{val * val2}";
+                                    break;
+                                }
+                            }
+                        }
+                        i = 0;
+                        anchor = 0;
+                        continue;
+                    }
+                }
+                else if (parts[index].Substring(anchor, i - anchor).Contains("/")) {
+                    anchor = i;
+                    double val;
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                        //exception
+                    }
+                    else {
+                        //parse
+                        for (; i < parts[index].Length; i++) {
+                            if (parts[index].Substring(anchor, i - anchor).Contains("+") || i == parts[index].Length - 1) {
+                                anchor = i;
+                                double val2;
+                                if (!double.TryParse(parts[index].Substring(anchor, i - anchor + 1), out val2)) {
+                                    //exception
+                                }
+                                else {
+                                    //total += val2;
+                                    num = $"{val / val2}";
+                                    break;
+                                }
+                            }
+                        }
+                        i = 0;
+                        anchor = 0;
+                        continue;
+                    }
+                }
+               
+                
             }
-            parts[index] = $"{total}";
+            //parts[index] = num;
+            //parts[index] = $"{total}";
             return index;
             //REDACTED me this is going to be tricky
             //TODO THIS
@@ -440,7 +560,7 @@ namespace EduCodeCompiler {
         private static class Generator {
             private static string totalFileText = "";
             private static string L = Environment.NewLine;
-            private const string fileDir = "GENERATED.cs";
+            internal static string fileDir = "GENERATED.cs"; //default
             public static void BeginMain() {
                 if (!File.Exists(fileDir)) {
                     File.Create(fileDir);
@@ -519,6 +639,7 @@ namespace EduCodeCompiler {
                     throw new IOException("Specified .cs file does not exist.");
                     /*throw new Exception("No file");*/
                 }
+                Generator.fileDir = directoryToOutput;
                 string text = File.ReadAllText(fileOfUncompiled);
                 string[] textInParts = text.Split(new string[] { " ", "\n", ";", Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
                 BeginParse(textInParts);
