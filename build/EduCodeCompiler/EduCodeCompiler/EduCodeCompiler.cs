@@ -454,83 +454,132 @@ namespace EduCodeCompiler {
                     }
                 }
                 else if (parts[index].Substring(anchor, i - anchor).Contains("-") && parts[index].Substring(0,1) != "-") {
-                    anchor = i;
+                    startIndex = i;
                     double val;
                     if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
                         //exception
                     }
                     else {
-                        //parse
+                        //look for next number
                         anchor = i;
                         total += val;
-                        for (; i < parts[index].Length; i++) {
-                            if (parts[index].Substring(anchor, i - anchor).Contains("+") || i == parts[index].Length - 1) {
-                                anchor = i;
-                                double val2;
-                                if (!double.TryParse(parts[index].Substring(anchor, i - anchor + 1), out val2)) {
-                                    //exception
-                                }
-                                else {
-                                    //total += val2;
-                                    num = $"{val - val2}{parts[index].Substring(i, 1)}";
-                                    break;
-                                }
-                            }
+                        int len = 0;
+                        while (!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                            len++;
                         }
+                        int anchor2 = i - 1 + len;
+                        i = len;
+                        int len2 = anchor2 - anchor;
+                        string oPart;
+                        bool end;
+                        if (startIndex + len == parts[index].Length) {
+                            oPart = parts[index].Substring(startIndex);
+                            end = true;
+                        }
+                        else {
+                            oPart = parts[index].Substring(anchor, len2);
+                            end = false;
+                        }
+
+                        double val2;
+                        if (!double.TryParse(oPart, out val2)) {
+                            //exception
+                        }
+                        else {
+                            total -= val2;
+                            if (!end) parts[index] = total + parts[index].Substring(anchor2);
+                            else parts[index] = "" + total;
+                        }
+
+                        total = 0;
                         i = 0;
                         anchor = 0;
                         continue;
                     }
                 }
                 else if (parts[index].Substring(anchor, i - anchor).Contains("*")) {
-                    anchor = i;
+                    startIndex = i;
                     double val;
                     if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
                         //exception
                     }
                     else {
-                        //parse
-                        for (; i < parts[index].Length; i++) {
-                            if (parts[index].Substring(anchor, i - anchor).Contains("+") || i == parts[index].Length - 1) {
-                                anchor = i;
-                                double val2;
-                                if (!double.TryParse(parts[index].Substring(anchor, i - anchor + 1), out val2)) {
-                                    //exception
-                                }
-                                else {
-                                    //total += val2;
-                                    num = $"{val * val2}";
-                                    break;
-                                }
-                            }
+                        //look for next number
+                        anchor = i;
+                        total += val;
+                        int len = 0;
+                        while (!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                            len++;
                         }
+                        int anchor2 = i - 1 + len;
+                        i = len;
+                        int len2 = anchor2 - anchor;
+                        string oPart;
+                        bool end;
+                        if (startIndex + len == parts[index].Length) {
+                            oPart = parts[index].Substring(startIndex);
+                            end = true;
+                        }
+                        else {
+                            oPart = parts[index].Substring(anchor, len2);
+                            end = false;
+                        }
+
+                        double val2;
+                        if (!double.TryParse(oPart, out val2)) {
+                            //exception
+                        }
+                        else {
+                            total *= val2;
+                            if (!end) parts[index] = total + parts[index].Substring(anchor2);
+                            else parts[index] = "" + total;
+                        }
+
+                        total = 0;
                         i = 0;
                         anchor = 0;
                         continue;
                     }
                 }
                 else if (parts[index].Substring(anchor, i - anchor).Contains("/")) {
-                    anchor = i;
+                    startIndex = i;
                     double val;
                     if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
                         //exception
                     }
                     else {
-                        //parse
-                        for (; i < parts[index].Length; i++) {
-                            if (parts[index].Substring(anchor, i - anchor).Contains("+") || i == parts[index].Length - 1) {
-                                anchor = i;
-                                double val2;
-                                if (!double.TryParse(parts[index].Substring(anchor, i - anchor + 1), out val2)) {
-                                    //exception
-                                }
-                                else {
-                                    //total += val2;
-                                    num = $"{val / val2}";
-                                    break;
-                                }
-                            }
+                        //look for next number
+                        anchor = i;
+                        total += val;
+                        int len = 0;
+                        while (!parts[index].Substring(anchor, len).Contains("+") && startIndex + len < parts[index].Length) {
+                            len++;
                         }
+                        int anchor2 = i - 1 + len;
+                        i = len;
+                        int len2 = anchor2 - anchor;
+                        string oPart;
+                        bool end;
+                        if (startIndex + len == parts[index].Length) {
+                            oPart = parts[index].Substring(startIndex);
+                            end = true;
+                        }
+                        else {
+                            oPart = parts[index].Substring(anchor, len2);
+                            end = false;
+                        }
+
+                        double val2;
+                        if (!double.TryParse(oPart, out val2)) {
+                            //exception
+                        }
+                        else {
+                            total /= val2;
+                            if (!end) parts[index] = total + parts[index].Substring(anchor2);
+                            else parts[index] = "" + total;
+                        }
+
+                        total = 0;
                         i = 0;
                         anchor = 0;
                         continue;
