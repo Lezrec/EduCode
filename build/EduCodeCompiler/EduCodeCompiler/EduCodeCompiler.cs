@@ -70,9 +70,11 @@ namespace EduCodeCompiler {
                 return value.ToString();
             }
 
-
+            internal object Value { get { return value; } }
             //TODO: CHECK IF I DID EVERYTHING I NEEDED TO DO
         }
+
+        
 
         private static void StoreVariable(Variable var) {
             if (variables == null) variables = new List<Variable>();
@@ -115,6 +117,16 @@ namespace EduCodeCompiler {
                     case "print":
                         index = RunThroughPrint(parts, index);
                         break;
+                    case "square":
+                        index = SquareVar(parts, index);
+                        break;
+                    case "cube":
+                        index = CubeVar(parts, index);
+                        break;
+                    case "ln":
+                        break;
+                    case "log":
+                        break;
                     default:
                         if (VarExists(part)) {
                             index = RunThroughVarReassignment(parts, index);
@@ -128,7 +140,97 @@ namespace EduCodeCompiler {
 
         }
 
+        
+
         //These methods return the next unparsed index
+
+        private static int LnVar(string[] parts, int index) {
+            index++;
+            bool foundVar = false;
+            for (int i = 0; i < variables.ToArray().Length; i++) {
+                if (variables.ToArray()[i].Name == parts[index]) {
+                    if (!(variables[i].Value is double) && !(variables[i].Value is int)) {
+                        throw new IOException("Cannot natural log this type of variable");
+                    }
+                    variables[i].Reassign(Math.Log((double)variables[i].Value));
+                    foundVar = true;
+                    break;
+                }
+            }
+
+            if (!foundVar) {
+                throw new IOException($"No variable matched called {parts[index]}");
+                //exception
+            }
+            else index++;
+            return index;
+        }
+
+        private static int Log10Var(string[] parts, int index) {
+            index++;
+            bool foundVar = false;
+            for (int i = 0; i < variables.ToArray().Length; i++) {
+                if (variables.ToArray()[i].Name == parts[index]) {
+                    if (!(variables[i].Value is double) && !(variables[i].Value is int)) {
+                        throw new IOException("Cannot natural log this type of variable");
+                    }
+                    variables[i].Reassign(Math.Log10((double)variables[i].Value));
+                    foundVar = true;
+                    break;
+                }
+            }
+
+            if (!foundVar) {
+                throw new IOException($"No variable matched called {parts[index]}");
+                //exception
+            }
+            else index++;
+            return index;
+        }
+
+        private static int SquareVar(string[] parts, int index) {
+            index++;
+            bool foundVar = false;
+            for(int i = 0; i < variables.ToArray().Length; i++) {
+                if (variables.ToArray()[i].Name == parts[index]) {
+                    if (!(variables[i].Value is double) && !(variables[i].Value is int)) {
+                        throw new IOException("Cannot square this type of variable");
+                    }
+                    variables[i].Reassign(Math.Pow((double)variables[i].Value,2));
+                    foundVar = true;
+                    break;
+                }
+            }
+            
+            if (!foundVar) {
+                throw new IOException($"No variable matched called {parts[index]}");
+                //exception
+            }
+            else index++;
+            return index;
+        }
+
+        private static int CubeVar(string[] parts, int index) {
+            index++;
+            bool foundVar = false;
+            for (int i = 0; i < variables.ToArray().Length; i++) {
+                if (variables.ToArray()[i].Name == parts[index]) {
+                    if (!(variables[i].Value is double) && !(variables[i].Value is int)) {
+                        throw new IOException("Cannot cube this type of variable");
+                    }
+                    variables[i].Reassign(Math.Pow((double)variables[i].Value, 3));
+                    foundVar = true;
+                    break;
+                }
+            }
+
+            if (!foundVar) {
+                throw new IOException($"No variable matched called {parts[index]}");
+                //exception
+            }
+            else index++;
+            return index;
+        }
 
         //variable x = 10;
         private static int RunThroughVarAssignment(string[] parts, int index) {
@@ -139,9 +241,21 @@ namespace EduCodeCompiler {
             }
             else if (parts[index] == "=") {
                 //This raises an error, there is no variable name
+                throw new IOException("Cannot name a variable = or have no variable name");
             }
             else {
                 string varName = parts[index];
+                switch(varName) {
+                    case "e":
+                        throw new IOException("Cannot assign a variable with name e (reserved name for the constant)");
+                    case "ln":
+                    case "log":
+                        throw new IOException("Cannot assign a variable with name log/ln (reserved for the functions)");
+                    case "square":
+                        throw new IOException("Cannot assign a variable with name square (reserved for the function)");
+                    case "cube":
+                        throw new IOException("Cannot assign a variable with name cube (reserved for the function");
+                }
                 index++;
                 if (parts[index] != "=") {
                     //This raises an error, there is no equals sign
@@ -314,7 +428,7 @@ namespace EduCodeCompiler {
                     double.TryParse(parts[index], out valIfDouble);
                     for (int i = 0; i < vars.Length; i++) {
                         if (vars[i].Name == name) {
-                            vars[i].Reassign(valIfInt);
+                            vars[i].Reassign(valIfDouble);
                         }
                     }
                 }
@@ -413,10 +527,24 @@ namespace EduCodeCompiler {
                 if (parts[index].Substring(anchor, i - anchor).Contains("+")) {
                     startIndex = i;
                     double val;
-                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val) && !VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+                        
                         //exception
                     }
                     else {
+                        if (VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
+                            for(int j = 0; j < variables.ToArray().Length; j++) {
+                                if (variables[j].Name == parts[index].Substring(anchor, i - anchor - 1)) {
+                                    if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                        throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                    }
+                                    val = (double)variables[j].Value;
+                                }
+                                
+                            }
+                            
+                        }
                         //look for next number
                         anchor = i;
                         total += val;
@@ -438,10 +566,24 @@ namespace EduCodeCompiler {
                         }
                             
                         double val2;
-                        if (!double.TryParse(oPart, out val2)) {
+                        if (!double.TryParse(oPart, out val2) && !VarExists(oPart)) {
+
                             //exception
                         }
                         else {
+                            if (VarExists(oPart)) {
+
+                                for (int j = 0; j < variables.ToArray().Length; j++) {
+                                    if (variables[j].Name == oPart) {
+                                        if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                            throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                        }
+                                        val2 = (double)variables[j].Value;
+                                    }
+
+                                }
+
+                            }
                             total += val2;
                             if (!end) parts[index] = total + parts[index].Substring(anchor2);
                             else parts[index] = "" + total;
@@ -456,11 +598,24 @@ namespace EduCodeCompiler {
                 else if (parts[index].Substring(anchor, i - anchor).Contains("-") && parts[index].Substring(0,1) != "-") {
                     startIndex = i;
                     double val;
-                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val) && !VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
                         //exception
                     }
                     else {
-                        //look for next number
+                        if (VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
+                            for (int j = 0; j < variables.ToArray().Length; j++) {
+                                if (variables[j].Name == parts[index].Substring(anchor, i - anchor - 1)) {
+                                    if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                        throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                    }
+                                    val = (double)variables[j].Value;
+                                }
+
+                            }
+
+                        }
                         anchor = i;
                         total += val;
                         int len = 0;
@@ -482,10 +637,24 @@ namespace EduCodeCompiler {
                         }
 
                         double val2;
-                        if (!double.TryParse(oPart, out val2)) {
+                        if (!double.TryParse(oPart, out val2) && !VarExists(oPart)) {
+
                             //exception
                         }
                         else {
+                            if (VarExists(oPart)) {
+
+                                for (int j = 0; j < variables.ToArray().Length; j++) {
+                                    if (variables[j].Name == oPart) {
+                                        if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                            throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                        }
+                                        val2 = (double)variables[j].Value;
+                                    }
+
+                                }
+
+                            }
                             total -= val2;
                             if (!end) parts[index] = total + parts[index].Substring(anchor2);
                             else parts[index] = "" + total;
@@ -500,11 +669,24 @@ namespace EduCodeCompiler {
                 else if (parts[index].Substring(anchor, i - anchor).Contains("*")) {
                     startIndex = i;
                     double val;
-                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val) && !VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
                         //exception
                     }
                     else {
-                        //look for next number
+                        if (VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
+                            for (int j = 0; j < variables.ToArray().Length; j++) {
+                                if (variables[j].Name == parts[index].Substring(anchor, i - anchor - 1)) {
+                                    if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                        throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                    }
+                                    val = (double)variables[j].Value;
+                                }
+
+                            }
+
+                        }
                         anchor = i;
                         total += val;
                         int len = 0;
@@ -526,10 +708,24 @@ namespace EduCodeCompiler {
                         }
 
                         double val2;
-                        if (!double.TryParse(oPart, out val2)) {
+                        if (!double.TryParse(oPart, out val2) && !VarExists(oPart)) {
+
                             //exception
                         }
                         else {
+                            if (VarExists(oPart)) {
+
+                                for (int j = 0; j < variables.ToArray().Length; j++) {
+                                    if (variables[j].Name == oPart) {
+                                        if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                            throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                        }
+                                        val2 = (double)variables[j].Value;
+                                    }
+
+                                }
+
+                            }
                             total *= val2;
                             if (!end) parts[index] = total + parts[index].Substring(anchor2);
                             else parts[index] = "" + total;
@@ -544,11 +740,24 @@ namespace EduCodeCompiler {
                 else if (parts[index].Substring(anchor, i - anchor).Contains("/")) {
                     startIndex = i;
                     double val;
-                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val)) {
+                    if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val) && !VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
                         //exception
                     }
                     else {
-                        //look for next number
+                        if (VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
+
+                            for (int j = 0; j < variables.ToArray().Length; j++) {
+                                if (variables[j].Name == parts[index].Substring(anchor, i - anchor - 1)) {
+                                    if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                        throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                    }
+                                    val = (double)variables[j].Value;
+                                }
+
+                            }
+
+                        }
                         anchor = i;
                         total += val;
                         int len = 0;
@@ -570,10 +779,24 @@ namespace EduCodeCompiler {
                         }
 
                         double val2;
-                        if (!double.TryParse(oPart, out val2)) {
+                        if (!double.TryParse(oPart, out val2) && !VarExists(oPart)) {
+
                             //exception
                         }
                         else {
+                            if (VarExists(oPart)) {
+
+                                for (int j = 0; j < variables.ToArray().Length; j++) {
+                                    if (variables[j].Name == oPart) {
+                                        if (!(variables[j].Value is double) && !(variables[j].Value is int)) {
+                                            throw new IOException("Cannot use this type of variable for adding/subtracting/multiplying/dividing");
+                                        }
+                                        val2 = (double)variables[j].Value;
+                                    }
+
+                                }
+
+                            }
                             total /= val2;
                             if (!end) parts[index] = total + parts[index].Substring(anchor2);
                             else parts[index] = "" + total;
@@ -658,6 +881,7 @@ namespace EduCodeCompiler {
                 string message = exc.Message;
                 string toString = exc.ToString();
                 string stackTrace = exc.StackTrace;
+                WriteToDebugFile(message);
                 //TODO THIS
             }
 
