@@ -184,6 +184,9 @@ namespace EduCodeCompiler {
                     case "loop":
                         index = Loop(parts, index);
                         break;
+                    case "if":
+                        index = Conditional(parts, index);
+                        break;
                     case ":":
                         index++;
                         break;
@@ -203,6 +206,58 @@ namespace EduCodeCompiler {
         
 
         //These methods return the next unparsed index
+        private static int Conditional(string[] parts, int index) {
+            index++;
+            string varName = parts[index];
+            index++;
+            if (!VarExists(varName)) {
+                throw new IOException($"No variable of name {varName}");
+            }
+            else {
+                if (parts[index] != "equals") {
+                    throw new IOException($"Expected equals, recieved {parts[index]}");
+                }
+                else {
+                    Variable var = null;
+                    foreach (Variable vr in variables) {
+                        if (vr.Name == varName) {
+                            var = vr;
+                            break;
+                        }
+                    }
+                    index++;
+                    bool val;
+                    if (var.Value.ToString() == parts[index]) { // for now this only works for numbers
+                        val = true;
+                    }
+                    else {
+                        val = false;
+                    }
+                    index++;
+                    if (parts[index++] == "then" && parts[index++] == "do") {
+                        if (parts[index] != ":") {
+                            throw new IOException($"Expected : recieved {parts[index]}");
+                        }
+                        else {
+                            index++;
+                            List<string> cmdParts = new List<string>();
+                            while (parts[index] != ":") {
+                                cmdParts.Add(parts[index]);
+                                index++;
+                            }
+                            if (val) BeginParse(cmdParts.ToArray());
+                            
+                        }
+                    }
+                    else {
+                        throw new IOException("Expected then do after conditional");
+                    }
+
+                }
+                return index;   
+            }
+        }
+
 
         private static int Loop(string[] parts, int index) {
             index++;
