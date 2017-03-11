@@ -14,7 +14,8 @@ using System.Collections.Generic;
 namespace EduCodeCompiler {
     public static class Compiler {
         private static List<Variable> variables;
-
+        private static List<Variable> loopVariables;
+        private static bool isLooping = false;
 
         private class Variable {
             public enum VariableType {
@@ -62,26 +63,60 @@ namespace EduCodeCompiler {
             }
 
             public override bool Equals(object other) {
-                return value.Equals(other); //Will have to create equals method for groups
+                Variable o = other as Variable;
+                return o.ToString() == ToString();//Will have to create equals method for groups
             }
+
+            
 
             public override string ToString() {
                 //for now
-                return value.ToString();
+                return name;
             }
 
             internal object Value { get { return value; } }
             //TODO: CHECK IF I DID EVERYTHING I NEEDED TO DO
         }
 
-        
+        private static void StoreLoopVariable(Variable var) {
+            if (loopVariables == null) loopVariables = new List<Variable>();
+            foreach (Variable vr in loopVariables) {
+                if (var.Name == vr.Name) {
+                    throw new IOException("Cannot instantiate 2 variables with the same name");
+                }
+            }
+            loopVariables.Add(var);
+            StoreVariable(var);
+        }
+
+        private static bool LoopVariablesContain(Variable var) {
+            foreach(Variable vr in loopVariables) {
+                if (vr.Name == var.Name) return true;
+            }
+            return false;
+        }
+
+        private static void ClearVarListFromLoopVars() {
+            List<string> toRemove = new List<string>();
+            foreach(Variable var in loopVariables) {
+                toRemove.Add(var.Name);
+            }
+            foreach(string name in toRemove) {
+                Variable removeVar = new Variable(name, Variable.VariableType.Number, 0);
+                variables.Remove(removeVar);
+            }
+            loopVariables = new List<Variable>();
+        }
 
         private static void StoreVariable(Variable var) {
             if (variables == null) variables = new List<Variable>();
             foreach (Variable vr in variables) {
                 if (var.Name == vr.Name) {
+                    if (isLooping && LoopVariablesContain(var)) {
+
+                    }
                     //uh oh, cant instantiate 2 variables of the same name!
-                    throw new Exception(); //todo make this actually decent
+                    else throw new IOException("Cannot instantiate 2 variables with the same name"); //todo make this actually decent
                 }
 
             }
@@ -99,11 +134,28 @@ namespace EduCodeCompiler {
             }
         }
 
+        private static void ChangeLoopVarValue(string name, object value) {
+            foreach (Variable var in variables) {
+                if (var.Name == name) {
+                    var.Reassign(value);
+                    break;
+                }
+                
+                }
+            foreach (Variable var in loopVariables) {
+                if (var.Name == name) {
+                    var.Reassign(value);
+                    break;
+                }
+            }
+        }
+
 
 
         private static void BeginParse(string[] parts) {
             int index = 0;
             while (index < parts.Length) {
+                
                 string part = parts[index];
                 switch (part) {
                     case "variable":
@@ -124,8 +176,16 @@ namespace EduCodeCompiler {
                         index = CubeVar(parts, index);
                         break;
                     case "ln":
+                        index =LnVar(parts, index);
                         break;
                     case "log":
+                        index =Log10Var(parts, index);
+                        break;
+                    case "loop":
+                        index = Loop(parts, index);
+                        break;
+                    case ":":
+                        index++;
                         break;
                     default:
                         if (VarExists(part)) {
@@ -136,7 +196,7 @@ namespace EduCodeCompiler {
                         break;
                 }
             }
-            Debug.WriteToDebugFile("Successful parsing.");
+            if (!isLooping) Debug.WriteToDebugFile("Successful parsing.");
 
         }
 
@@ -144,6 +204,35 @@ namespace EduCodeCompiler {
 
         //These methods return the next unparsed index
 
+        private static int Loop(string[] parts, int index) {
+            index++;
+            string times = parts[index];
+            int amt;
+            if (!int.TryParse(times, out amt)) {
+                throw new IOException($"Unrecognized token: {parts[index]}");
+            }
+            else {
+                index++;
+                if (parts[index] != ":") {
+                    throw new IOException($"Expected \":\", recieved {parts[index]}");
+                }
+                index++;
+                List<string> cmdParts = new List<string>();
+                while(parts[index] != ":") {
+                    cmdParts.Add(parts[index]);
+                    index++;
+                }
+                isLooping = true;
+                for(int i = 0; i < amt; i++) {
+                    BeginParse(cmdParts.ToArray());
+                    ClearVarListFromLoopVars();
+                }
+            }
+            isLooping = false;
+            
+            return index;
+        }
+        
         private static int LnVar(string[] parts, int index) {
             index++;
             bool foundVar = false;
@@ -306,18 +395,21 @@ namespace EduCodeCompiler {
                        
                         
                         Variable var = new Variable(varName, Variable.VariableType.String, valIsStr);
-                        StoreVariable(var);
+                        if (!isLooping) StoreVariable(var);
+                        else StoreLoopVariable(var);
                     }
                     else if (double.TryParse(parts[index], out valIfDouble)) {
                         //double assignment
                         Variable var = new Variable(varName, Variable.VariableType.Number, valIfDouble);
-                        StoreVariable(var);
+                        if (!isLooping) StoreVariable(var);
+                        else StoreLoopVariable(var);
                     }
                     else if (int.TryParse(parts[index], out valIfInt)) {
                         //int assignment
                         //technically this should never happen as double is more inclusive than int
                         Variable var = new Variable(varName, Variable.VariableType.Number, valIfInt);
-                        StoreVariable(var);
+                        if (!isLooping) StoreVariable(var);
+                        else StoreLoopVariable(var);
                     }
                     else if (parts[index].Substring(0, 1) == "[") {
 
@@ -329,7 +421,8 @@ namespace EduCodeCompiler {
                         index = GroupModificationsNumbers(parts,index);
                         double.TryParse(parts[index], out valIfDouble);
                         Variable var = new Variable(varName, Variable.VariableType.Number, valIfDouble);
-                        StoreVariable(var);
+                        if (!isLooping) StoreVariable(var);
+                        else StoreLoopVariable(var);
                     }
                     index++;
                 }
@@ -814,7 +907,7 @@ namespace EduCodeCompiler {
             //parts[index] = num;
             //parts[index] = $"{total}";
             return index;
-            //REDACTED me this is going to be tricky
+            //this is going to be tricky
             //TODO THIS
         }
 
@@ -849,8 +942,21 @@ namespace EduCodeCompiler {
                 Debug.WriteToDebugFile($"{text} was written to genfile");
             }
 
+            internal static void WriteVarAssign(Variable var) {
+                WriteToGenFile($"var ${var.Name} = {var.Value};");
+            }
+            
+            internal static void WriteVarReassign(Variable var, object newValue) {
+                WriteToGenFile($"{var.Name} = {newValue}");
+            }
+
+            internal static void WritePrint(string contents) {
+                WriteToGenFile($"Console.WriteLine(\"{contents}\");");
+            }
+
             public static void EndMain() {
-                totalFileText += "}"; //LUL
+                totalFileText += "}";
+                File.WriteAllText(fileDir, totalFileText);
                 Debug.WriteToDebugFile("Main function closed");
             }
         }
@@ -858,13 +964,15 @@ namespace EduCodeCompiler {
         //Executes a flow based on Parsing
         private static class Executor {
             internal static void PrintVar(Variable var) {
-                Console.WriteLine(var.ToString());
+                Console.WriteLine(var.Value);
             }
 
             internal static void Print(string str) {
                 Console.WriteLine(str);
             }
         }
+
+
 
 
 
