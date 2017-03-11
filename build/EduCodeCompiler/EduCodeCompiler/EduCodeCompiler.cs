@@ -13,8 +13,8 @@ using System.Collections.Generic;
 
 namespace EduCodeCompiler {
     public static class Compiler {
-        private static List<Variable> variables;
-        private static List<Variable> loopVariables;
+        private static List<Variable> variables = new List<Variable>();
+        private static List<Variable> loopVariables = new List<Variable>();
         private static bool isLooping = false;
 
         private class Variable {
@@ -534,6 +534,7 @@ namespace EduCodeCompiler {
 
         //print 2, print 2.5, print [2,3,4,5], print ["2","a","c","e"]
         private static int RunThroughPrint(string[] parts, int index) {
+            if (variables == null) variables = new List<Variable>();
             index++;
             if (VarExists(parts[index])) {
                 //printing variable
@@ -554,7 +555,7 @@ namespace EduCodeCompiler {
                     Executor.Print($"{valIsNum}");
                 }
 
-                else if (parts[index].Contains("+")) {
+                else if (parts[index].Contains("+") || parts[index].Contains("*") || parts[index].Contains("/") || parts[index].Contains("-")) {
                     //groupmodification
                     GroupModificationsNumbers(parts, index);
                     double.TryParse(parts[index], out valIsNum);
