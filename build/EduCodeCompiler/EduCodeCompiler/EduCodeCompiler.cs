@@ -246,6 +246,12 @@ namespace EduCodeCompiler {
                                 index++;
                             }
                             if (val) BeginParse(cmdParts.ToArray());
+                            else {
+                                while(parts[index] != ":") {
+                                    index++;
+                                }
+                                
+                            }
                             
                         }
                     }
