@@ -246,6 +246,15 @@ namespace EduCodeCompiler {
                                 index++;
                             }
                             if (val) BeginParse(cmdParts.ToArray());
+
+                            else {
+                                while(parts[index] != ":") {
+                                    index++;
+                                }
+                                
+                            }
+
+
                             
                         }
                     }
@@ -750,6 +759,7 @@ namespace EduCodeCompiler {
                     if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val) && !VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
 
                         //exception
+
                     }
                     else {
                         if (VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
@@ -771,8 +781,7 @@ namespace EduCodeCompiler {
                         while (!parts[index].Substring(anchor, len).Contains("-") && startIndex + len < parts[index].Length) {
                             len++;
                         }
-                        int anchor2 = i - 1 + len;
-                        i = len;
+                        int anchor2 = i - 1 + len;                        i = len;
                         int len2 = anchor2 - anchor;
                         string oPart;
                         bool end;
@@ -821,6 +830,7 @@ namespace EduCodeCompiler {
                     if (!double.TryParse(parts[index].Substring(anchor, i - anchor - 1), out val) && !VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
 
                         //exception
+
                     }
                     else {
                         if (VarExists(parts[index].Substring(anchor, i - anchor - 1))) {
@@ -839,7 +849,9 @@ namespace EduCodeCompiler {
                         anchor = i;
                         total += val;
                         int len = 0;
+
                         while (!parts[index].Substring(anchor, len).Contains("*") && startIndex + len < parts[index].Length) {
+
                             len++;
                         }
                         int anchor2 = i - 1 + len;
@@ -875,7 +887,9 @@ namespace EduCodeCompiler {
                                 }
 
                             }
+
                             total *= val2;
+
                             if (!end) parts[index] = total + parts[index].Substring(anchor2);
                             else parts[index] = "" + total;
                         }
@@ -886,6 +900,7 @@ namespace EduCodeCompiler {
                         continue;
                     }
                 }
+
                 else if (parts[index].Substring(anchor, i - anchor).Contains("/")) {
                     startIndex = i;
                     double val;
